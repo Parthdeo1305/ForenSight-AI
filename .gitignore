@@ -1,0 +1,19 @@
+venv/
+__pycache__/
+*.pyc
+.env
+datasets/processed/
+weights/
+logs/
+.DS_Store
+*.db
+*.sqlite3
+
+# Ignore VSCode and IDE
+.vscode/
+.idea/
+
+# Ignore frontend build files (although frontend has its own gitignore)
+frontend/react-ui/node_modules/
+frontend/react-ui/dist/
+frontend/react-ui/.env

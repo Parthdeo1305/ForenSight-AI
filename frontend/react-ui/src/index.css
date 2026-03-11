@@ -1,0 +1,160 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-dark-900 text-white font-sans antialiased;
+    background: radial-gradient(ellipse at top left, #1e0a3c 0%, #0a0a0f 40%, #001a2c 100%);
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-900;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary-600 rounded-full;
+  }
+}
+
+@layer components {
+  /* Glass Card */
+  .glass-card {
+    @apply rounded-2xl border border-white/10 backdrop-blur-md;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300;
+  }
+  .glass-card-hover:hover {
+    background: rgba(255, 255, 255, 0.07);
+    @apply border-primary-500/40 shadow-glow-purple;
+    transform: translateY(-2px);
+  }
+
+  /* Gradient Button */
+  .btn-primary {
+    @apply px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 relative overflow-hidden;
+    background: linear-gradient(135deg, #7c3aed, #06b6d4);
+  }
+  .btn-primary:hover {
+    @apply shadow-glow-purple;
+    transform: translateY(-1px);
+  }
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    @apply h-2 rounded-full overflow-hidden;
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .progress-fill {
+    @apply h-full rounded-full transition-all duration-700 ease-out;
+    background: linear-gradient(90deg, #7c3aed, #06b6d4);
+  }
+
+  /* Score gauge arc text */
+  .score-label {
+    @apply text-5xl font-black;
+    background: linear-gradient(135deg, #a78bfa, #22d3ee);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Animated border */
+  .border-gradient {
+    position: relative;
+    border-radius: 1rem;
+  }
+  .border-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, #7c3aed, #06b6d4, #10b981);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Glow dot */
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
+    box-shadow: 0 0 8px currentColor;
+  }
+
+  /* Tab */
+  .tab-btn {
+    @apply px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200;
+  }
+  .tab-btn.active {
+    @apply text-white;
+    background: linear-gradient(135deg, #7c3aed40, #06b6d440);
+    border: 1px solid rgba(124, 58, 237, 0.4);
+  }
+  .tab-btn:not(.active) {
+    @apply text-gray-400 hover:text-white hover:bg-white/5;
+  }
+
+  /* Drag zone */
+  .drop-zone {
+    @apply border-2 border-dashed border-white/20 rounded-2xl transition-all duration-300 cursor-pointer;
+  }
+  .drop-zone.active {
+    @apply border-primary-500 bg-primary-500/10;
+    box-shadow: 0 0 30px rgba(124, 58, 237, 0.2);
+  }
+  .drop-zone:hover {
+    @apply border-white/40 bg-white/5;
+  }
+
+  /* Result badge */
+  .badge-fake {
+    @apply px-4 py-1.5 rounded-full text-sm font-bold;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+  }
+  .badge-real {
+    @apply px-4 py-1.5 rounded-full text-sm font-bold;
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+  }
+}
+
+/* SVG Arc animation */
+@keyframes strokeDash {
+  from { stroke-dashoffset: 283; }
+  to   { stroke-dashoffset: var(--target-offset); }
+}
+.arc-animate {
+  animation: strokeDash 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Particle background */
+.particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(124, 58, 237, 0.6);
+  animation: float 6s ease-in-out infinite;
+}

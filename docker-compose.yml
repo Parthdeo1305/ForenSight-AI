@@ -1,0 +1,43 @@
+# Usage: docker compose up --build   (requires Docker Desktop >= 4.x)
+# NOTE: Use "docker compose" (space), NOT "docker-compose" (hyphen).
+# The hyphenated form (v1) is no longer installed by default.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: antigravity_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./weights:/app/weights
+    environment:
+      - PYTHONPATH=/app
+      - ENVIRONMENT=production
+      - MAX_FILE_SIZE_MB=500
+      - ALLOWED_ORIGINS=http://localhost:3000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend/react-ui
+      dockerfile: Dockerfile.frontend
+    container_name: antigravity_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    restart: unless-stopped
+
+volumes:
+  uploads:
+  weights:

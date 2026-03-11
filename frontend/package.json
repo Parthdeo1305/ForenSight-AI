@@ -1,0 +1,12 @@
+{
+  "name": "antigravity-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Anti-Gravity Deepfake Detection — Frontend proxy scripts",
+  "scripts": {
+    "dev":     "npm run dev --prefix react-ui",
+    "build":   "npm run build --prefix react-ui",
+    "preview": "npm run preview --prefix react-ui",
+    "install": "npm install --prefix react-ui"
+  }
+}

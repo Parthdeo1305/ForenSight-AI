@@ -1,0 +1,34 @@
+# ============================================================
+# ForenSight AI — Deployment Requirements (Hugging Face Spaces)
+# Includes PyTorch CPU + pre-trained deepfake detection model
+# ============================================================
+
+# Backend API
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.7
+aiofiles>=23.2.1
+httpx>=0.26.0
+
+# Configuration
+python-dotenv>=1.0.0
+
+# Image / Video Processing
+Pillow>=10.1.0
+numpy>=1.26.0
+opencv-python-headless>=4.8.0
+
+# PyTorch CPU-only (smaller download, no CUDA)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.1.0
+torchvision>=0.16.0
+
+# Database
+aiosqlite>=0.20.0
+databases>=0.9.0
+
+# Authentication
+firebase-admin>=6.4.0
+
+# PDF Report Generation
+fpdf2>=2.7.0
