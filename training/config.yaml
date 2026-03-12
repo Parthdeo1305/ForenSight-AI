@@ -29,14 +29,14 @@ model:
 
 training:
   epochs: 50
-  batch_size: 32
+  batch_size: 16
   learning_rate: 1.0e-4
   weight_decay: 1.0e-5
   label_smoothing: 0.1
   early_stopping_patience: 7
   gradient_clip_norm: 1.0
   mixed_precision: true           # torch.cuda.amp
-  num_workers: 4
+  num_workers: 0                  # Fixed Windows PyTorch Shared Memory crash
   pin_memory: true
   seed: 42
 

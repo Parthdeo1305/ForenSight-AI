@@ -17,3 +17,15 @@ logs/
 frontend/react-ui/node_modules/
 frontend/react-ui/dist/
 frontend/react-ui/.env
+
+# Results and artifacts
+results/
+*.png
+*.jpg
+*.jpeg
+*.webp
+!frontend/react-ui/public/*.svg
+!frontend/react-ui/src/assets/*.png
+
+# Dataset
+datasets/kaggle_dfdc/

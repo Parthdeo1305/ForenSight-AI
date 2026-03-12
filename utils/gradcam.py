@@ -178,29 +178,31 @@ def overlay_to_base64(overlay: np.ndarray) -> str:
 
 def get_efficientnet_target_layer(model) -> nn.Module:
     """
-    Get the target layer for Grad-CAM on EfficientNet-B4.
-    Uses the last convolutional block for richest spatial features.
-    
-    Args:
-        model: EfficientNetDetector instance
-    
-    Returns:
-        Target nn.Module layer
+    Get the target layer for Grad-CAM on EfficientNet.
+    Supports both timm models (B4) and torchvision models (B0).
     """
-    # EfficientNet-B4 from timm: access last block
-    # blocks[-1] is the last stage of depthwise separable convolutions
-    backbone = model.backbone
-    if hasattr(backbone, "blocks"):
-        return backbone.blocks[-1]
-    elif hasattr(backbone, "layer4"):
-        return backbone.layer4[-1]  # ResNet-style
-    else:
-        # Generic fallback: last conv2d found
-        last_conv = None
-        for module in backbone.modules():
-            if isinstance(module, nn.Conv2d):
-                last_conv = module
-        return last_conv
+    # 1. Custom detector format (has backbone attribute)
+    if hasattr(model, "backbone"):
+        backbone = model.backbone
+        if hasattr(backbone, "blocks"):
+            return backbone.blocks[-1]
+        elif hasattr(backbone, "features"):
+            return backbone.features[-1]
+    
+    # 2. Torchvision format (straight features list)
+    if hasattr(model, "features"):
+        return model.features[-1]
+        
+    # 3. ResNet style
+    if hasattr(model, "layer4"):
+        return model.layer4[-1]
+        
+    # 4. Generic fallback: find last Conv2d
+    last_conv = None
+    for module in model.modules():
+        if isinstance(module, nn.Conv2d):
+            last_conv = module
+    return last_conv
 
 
 def generate_cnn_gradcam(

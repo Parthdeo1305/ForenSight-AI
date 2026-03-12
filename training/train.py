@@ -24,8 +24,14 @@ import argparse
 import os
 import sys
 import time
+import warnings
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+# Suppress albumentations check warnings and TF oneDNN warnings
+os.environ["NO_ALBUMENTATIONS_UPDATE"] = "1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+warnings.filterwarnings("ignore", category=UserWarning)
 
 import numpy as np
 import torch
@@ -173,7 +179,12 @@ def get_sampler(dataset: Dataset) -> Optional[WeightedRandomSampler]:
     Build WeightedRandomSampler to handle class imbalance.
     Ensures each batch has approximately equal REAL/FAKE samples.
     """
-    labels = [dataset[i][1] for i in range(len(dataset))]
+    # Super-fast label extraction (don't load images from disk!)
+    if hasattr(dataset, "df"):
+        labels = dataset.df["label"].astype(int).tolist()
+    else:
+        labels = [dataset[i][1] for i in range(len(dataset))]
+        
     class_counts = np.bincount(labels)
     class_weights = 1.0 / class_counts
     sample_weights = [class_weights[l] for l in labels]
@@ -235,8 +246,11 @@ def train_one_epoch(
     total_loss = 0.0
     all_preds, all_labels = [], []
     start = time.time()
+    
+    from tqdm import tqdm
+    pbar = tqdm(loader, desc=f"Epoch {epoch} [Train]", leave=False)
 
-    for batch_idx, (data, labels) in enumerate(loader):
+    for batch_idx, (data, labels) in enumerate(pbar):
         labels = labels.float().to(device)
 
         if model_name == "temporal":
@@ -285,7 +299,10 @@ def validate(
     total_loss = 0.0
     all_preds, all_labels, all_probs = [], [], []
 
-    for data, labels in loader:
+    from tqdm import tqdm
+    pbar = tqdm(loader, desc="Validation", leave=False)
+
+    for data, labels in pbar:
         labels = labels.float().to(device)
         data = data.to(device)
 
@@ -421,13 +438,32 @@ def train(model_name: str, config_path: str):
     weights_dir = config["paths"]["weights_dir"]
     os.makedirs(weights_dir, exist_ok=True)
     best_ckpt = os.path.join(weights_dir, f"{model_name}_best.pth")
-
+    start_epoch = 1
     best_val_loss = float("inf")
+
+    # ─── Resume Checkpoint Logic ──────────────────────────────────────────────
+    if os.path.exists(best_ckpt):
+        try:
+            print(f"[Train] Found existing checkpoint: {best_ckpt}. Loading...")
+            checkpoint = torch.load(best_ckpt, map_location=device)
+            # Match the keys used in original saving logic (model, optimizer)
+            model.load_state_dict(checkpoint["model"])
+            optimizer.load_state_dict(checkpoint["optimizer"])
+            start_epoch = checkpoint["epoch"] + 1
+            # Retrieve val_loss if it was saved, otherwise use inf
+            best_val_loss = checkpoint.get("val_loss", checkpoint.get("val_metrics", {}).get("loss", float("inf")))
+            print(f"[Train] Resumed from Epoch {checkpoint['epoch']} (Best Val Loss: {best_val_loss:.4f})")
+            
+            # Fast-forward scheduler
+            for _ in range(checkpoint["epoch"]):
+                scheduler.step()
+        except Exception as e:
+            print(f"[Train] Could not resume from checkpoint: {e}. Starting fresh.")
     print(f"\n{'='*60}")
     print(f"Starting training: {model_name.upper()} | Epochs: {tc['epochs']}")
     print(f"{'='*60}\n")
 
-    for epoch in range(1, tc["epochs"] + 1):
+    for epoch in range(start_epoch, tc["epochs"] + 1):
         # Train
         train_metrics = train_one_epoch(
             model, train_loader, optimizer, criterion, scaler,

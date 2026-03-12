@@ -164,6 +164,15 @@ class PretrainedDeepfakeDetector:
 
         # Run inference
         tensor = inference_transform(input_img).unsqueeze(0).to(self.device)
+        
+        # Heatmap generation (Grad-CAM)
+        heatmap_b64 = None
+        try:
+            from utils.gradcam import generate_cnn_gradcam
+            # Pretrained model uses cross-entropy, we explain the "Fake" class (index 1)
+            _, heatmap_b64 = generate_cnn_gradcam(self.model, tensor, input_img)
+        except Exception as e:
+            warnings.warn(f"[PretrainedDetector] Heatmap generation failed: {e}")
 
         with torch.no_grad():
             logits = self.model(tensor)
@@ -180,11 +189,11 @@ class PretrainedDeepfakeDetector:
             "deepfake_probability": round(fake_prob, 4),
             "confidence": round(confidence, 4),
             "cnn_score": round(fake_prob, 4),
-            "vit_score": round(fake_prob, 4),  # Same as CNN since single model
+            "vit_score": round(fake_prob, 4),
             "temporal_score": None,
             "model_agreement": round(confidence, 4),
             "face_detected": face_detected,
-            "heatmap": None,
+            "heatmap": heatmap_b64,
             "processing_time_sec": round(time.time() - start_time, 3),
             "input_type": "image",
         }
