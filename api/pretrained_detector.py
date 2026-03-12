@@ -259,6 +259,31 @@ class PretrainedDeepfakeDetector:
         confidence = max(avg_fake_prob, 1 - avg_fake_prob)
         label = "FAKE" if avg_fake_prob >= 0.5 else "REAL"
 
+        # ── Grad-CAM on representative frame ───────────────────────────
+        heatmap_b64 = None
+        try:
+            from utils.gradcam import generate_cnn_gradcam
+            # Select frame with score closest to average for most "typical" visualization
+            best_idx = int(np.argmin([abs(s - avg_fake_prob) for s in frame_scores]))
+            
+            # Re-read that specific frame
+            cap = cv2.VideoCapture(video_path)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, indices[best_idx])
+            ret, frame = cap.read()
+            cap.release()
+            
+            if ret:
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                pil_frame = Image.fromarray(frame_rgb)
+                face_img = self._detect_face(pil_frame)
+                input_img = face_img if face_img else pil_frame
+                
+                tensor = inference_transform(input_img).unsqueeze(0).to(self.device)
+                # Explanation for Fake class (index 1)
+                _, heatmap_b64 = generate_cnn_gradcam(self.model, tensor, input_img)
+        except Exception as e:
+            warnings.warn(f"[PretrainedDetector] Video heatmap failed: {e}")
+
         return {
             "label": label,
             "deepfake_probability": round(avg_fake_prob, 4),
@@ -271,7 +296,7 @@ class PretrainedDeepfakeDetector:
             "faces_detected_count": face_count,
             "frames_analyzed": len(frame_scores),
             "per_frame_scores": [round(s, 4) for s in frame_scores],
-            "heatmap": None,
+            "heatmap": heatmap_b64,
             "processing_time_sec": round(time.time() - start_time, 3),
             "input_type": "video",
         }
